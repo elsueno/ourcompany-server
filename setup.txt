@@ -13,16 +13,27 @@ L echo -e "Host ourcompany\n HostName 217.160.79.77\n User sven" >> ~/.ssh/confi
 L chmod 600 ~/.ssh/config R sudo apt update R
 L ssh ourcompany
 
-R sudo apt update R sudo apt install zsh
-R sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# from here on everything on remote
 
-R curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-R zsh
-R nvm install stable
-R node -v
-R npm i -g @openai/codex
-R codex login --device-auth
+# install oh-my-zsh, make zsh the login shell
+sudo apt update
+sudo apt install zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-R git clone git@github.com:elsueno/zsh-tools.git
-R echo "source ~/zsh-tools/zsh-tools.zsh" >> .zshrc
-R zsh
+# install codex
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+zsh
+nvm install stable
+node -v
+npm i -g @openai/codex
+codex login --device-auth
+
+# use install zsh-tools
+git clone git@github.com:elsueno/zsh-tools.git
+echo "source ~/zsh-tools/zsh-tools.zsh" >> .zshrc
+zsh
+
+# add user to group docker
+sudo usermod -aG docker sven
+newgrp docker
+
