@@ -15,6 +15,7 @@ L ssh ourcompany
 
 R sudo apt update R sudo apt install zsh
 R sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
 R curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 R zsh
 R nvm install stable
@@ -22,3 +23,6 @@ R node -v
 R npm i -g @openai/codex
 R codex login --device-auth
 
+R git clone git@github.com:elsueno/zsh-tools.git
+R echo "source ~/zsh-tools/zsh-tools.zsh" >> .zshrc
+R zsh
