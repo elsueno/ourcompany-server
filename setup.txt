@@ -4,6 +4,7 @@ L ssh ourcompany@217.160.79.77
 
 R sudo adduser sven
 R sudo usermod -aG sudo sven
+R sudo adduser kiwi-uploads
 R exit
 
 L ssh sven@217.160.79.77
