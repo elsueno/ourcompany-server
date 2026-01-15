@@ -40,6 +40,10 @@ curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/downl
 tar xf lazygit.tar.gz lazygit
 sudo install lazygit -D -t /usr/local/bin/
 
+# install lazydocker
+curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> .zshrc
+
 # use install zsh-tools
 git clone git@github.com:elsueno/zsh-tools.git
 echo "source ~/zsh-tools/zsh-tools.zsh" >> .zshrc
