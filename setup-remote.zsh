@@ -1,21 +1,3 @@
-L = local, R = remote
-
-L ssh ourcompany@217.160.79.77
-
-R sudo adduser sven
-R sudo usermod -aG sudo sven
-R sudo adduser kiwi-uploads
-R exit
-
-L ssh sven@217.160.79.77
-R exit
-
-L echo -e "Host ourcompany\n HostName 217.160.79.77\n User sven" >> ~/.ssh/config
-L chmod 600 ~/.ssh/config R sudo apt update R
-L ssh ourcompany
-
-# from here on everything on remote
-
 # install oh-my-zsh, make zsh the login shell
 sudo apt update
 sudo apt install zsh
