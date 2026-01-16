@@ -1,0 +1,168 @@
+- hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    user_name: "{{ lookup('env','USER') }}"
+    home_dir: "{{ lookup('env','HOME') }}"
+    repos_dir: "{{ home_dir }}/repos"
+    codex_login: false
+    repos:
+      - repo: "git@github.com:our-company-ltd-team/docker.git"
+        dest: "{{ repos_dir }}/docker"
+      - repo: "git@github.com:our-company-ltd-team/floriangraf.ch.git"
+        dest: "{{ repos_dir }}/floriangraf.ch"
+        recursive: true
+  tasks:
+    - name: Update apt cache
+      become: true
+      apt:
+        update_cache: true
+
+    - name: Base packages
+      become: true
+      apt:
+        name:
+          - zsh
+          - git
+          - curl
+          - wget
+          - tar
+          - ripgrep
+        state: present
+
+    - name: Ensure docker group exists
+      become: true
+      group:
+        name: docker
+        state: present
+
+    - name: Set default shell to zsh
+      become: true
+      user:
+        name: "{{ user_name }}"
+        shell: /usr/bin/zsh
+
+    - name: Add user to docker group
+      become: true
+      user:
+        name: "{{ user_name }}"
+        groups: docker
+        append: true
+
+    - name: Clone oh-my-zsh
+      git:
+        repo: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: "{{ home_dir }}/.oh-my-zsh"
+        update: true
+        depth: 1
+
+    - name: Ensure .zshrc exists
+      copy:
+        src: "{{ home_dir }}/.oh-my-zsh/templates/zshrc.zsh-template"
+        dest: "{{ home_dir }}/.zshrc"
+        remote_src: true
+        force: false
+
+    - name: Ensure ~/.local/bin on PATH
+      lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        regexp: '^export PATH="\\$HOME/\\.local/bin:\\$PATH"$'
+        line: 'export PATH="$HOME/.local/bin:$PATH"'
+
+    - name: Clone zsh-tools
+      git:
+        repo: git@github.com:elsueno/zsh-tools.git
+        dest: "{{ home_dir }}/zsh-tools"
+        update: true
+
+    - name: Source zsh-tools
+      lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        regexp: '^source ~/zsh-tools/zsh-tools\\.zsh$'
+        line: 'source ~/zsh-tools/zsh-tools.zsh'
+
+    - name: Fetch latest lazygit release
+      uri:
+        url: https://api.github.com/repos/jesseduffield/lazygit/releases/latest
+        return_content: true
+      register: lazygit_release
+      changed_when: false
+
+    - name: Set lazygit version
+      set_fact:
+        lazygit_version: "{{ lazygit_release.json.tag_name | regex_replace('^v', '') }}"
+
+    - name: Download lazygit
+      get_url:
+        url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+        dest: /tmp/lazygit.tar.gz
+        mode: "0644"
+
+    - name: Install lazygit
+      become: true
+      unarchive:
+        src: /tmp/lazygit.tar.gz
+        dest: /usr/local/bin
+        remote_src: true
+        mode: "0755"
+
+    - name: Install lazydocker
+      shell: curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+      args:
+        creates: "{{ home_dir }}/.local/bin/lazydocker"
+
+    - name: Install nvm
+      shell: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+      args:
+        creates: "{{ home_dir }}/.nvm/nvm.sh"
+
+    - name: Ensure NVM_DIR in .zshrc
+      lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        regexp: '^export NVM_DIR="\\$HOME/\\.nvm"$'
+        line: 'export NVM_DIR="$HOME/.nvm"'
+
+    - name: Ensure nvm.sh is sourced
+      lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        regexp: '^\\[ -s "\\$NVM_DIR/nvm\\.sh" \\] && \\. "\\$NVM_DIR/nvm\\.sh"$'
+        line: '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+
+    - name: Install Node LTS via nvm
+      shell: |
+        export NVM_DIR="{{ home_dir }}/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+        nvm install --lts
+      args:
+        executable: /bin/bash
+        creates: "{{ home_dir }}/.nvm/versions/node"
+
+    - name: Install Codex CLI
+      shell: |
+        export NVM_DIR="{{ home_dir }}/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+        npm install -g @openai/codex
+      args:
+        executable: /bin/bash
+
+    - name: Codex device login
+      shell: |
+        export NVM_DIR="{{ home_dir }}/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+        codex login --device-auth
+      args:
+        executable: /bin/bash
+      when: codex_login
+
+    - name: Ensure repos directory exists
+      file:
+        path: "{{ repos_dir }}"
+        state: directory
+
+    - name: Clone repos
+      git:
+        repo: "{{ item.repo }}"
+        dest: "{{ item.dest }}"
+        recursive: "{{ item.recursive | default(false) }}"
+        update: true
+      loop: "{{ repos }}"
