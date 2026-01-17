@@ -8,7 +8,6 @@ SSH_NAME="lychee"
 # Remote users
 REMOTE_ADMIN_USER="ourcompany"
 REMOTE_USER="sven"
-UPLOADS_USER="kiwi-uploads"
 
 SSH_CONFIG="${HOME}/.ssh/config"
 
@@ -48,7 +47,6 @@ EOF
 log "Creating users on ${REMOTE_SERVER} as ${REMOTE_ADMIN_USER}"
 ssh_admin "id -u ${REMOTE_USER} >/dev/null 2>&1 || sudo adduser ${REMOTE_USER}"
 ssh_admin "sudo usermod -aG sudo ${REMOTE_USER}"
-ssh_admin "id -u ${UPLOADS_USER} >/dev/null 2>&1 || sudo adduser ${UPLOADS_USER}"
 
 log "Updating apt on ${REMOTE_SERVER}"
 ssh_admin "sudo apt update"
