@@ -1,12 +1,11 @@
 #!/usr/bin/env zsh
 set -euo pipefail
 
-# Remote server and SSH alias
-REMOTE_SERVER="217.160.79.77"
-SSH_NAME="lychee"
+# SSH alias
+SSH_NAME="strawberry"
 
 # Remote users
-REMOTE_ADMIN_USER="ourcompany"
+REMOTE_ADMIN_USER="root"
 REMOTE_USER="sven"
 
 SSH_CONFIG="${HOME}/.ssh/config"
@@ -16,46 +15,39 @@ log() {
 }
 
 ssh_admin() {
-  ssh -t "${REMOTE_ADMIN_USER}@${REMOTE_SERVER}" "$@"
+  ssh -t "${REMOTE_ADMIN_USER}@${SSH_NAME}" "$@"
 }
 
 ssh_user() {
-  ssh -t "${REMOTE_USER}@${REMOTE_SERVER}" "$@"
+  ssh -t "${REMOTE_USER}@${SSH_NAME}" "$@"
 }
 
-ensure_ssh_config() {
-  mkdir -p "${HOME}/.ssh"
-  chmod 700 "${HOME}/.ssh"
-
+ensure_ssh_alias() {
   if [[ ! -f "${SSH_CONFIG}" ]]; then
-    touch "${SSH_CONFIG}"
+    log "Missing SSH config at ${SSH_CONFIG}; add Host ${SSH_NAME} and retry"
+    exit 1
   fi
 
   if grep -qE "^[[:space:]]*Host[[:space:]]+${SSH_NAME}$" "${SSH_CONFIG}"; then
-    log "SSH config already has Host ${SSH_NAME}; skipping"
+    log "Found SSH alias ${SSH_NAME} in ${SSH_CONFIG}"
   else
-    cat >> "${SSH_CONFIG}" <<EOF
-Host ${SSH_NAME}
-  HostName ${REMOTE_SERVER}
-  User ${REMOTE_USER}
-EOF
+    log "Missing SSH alias ${SSH_NAME} in ${SSH_CONFIG}; add it and retry"
+    exit 1
   fi
-
-  chmod 600 "${SSH_CONFIG}"
 }
 
-log "Creating users on ${REMOTE_SERVER} as ${REMOTE_ADMIN_USER}"
+log "Ensuring SSH alias ${SSH_NAME} in ${SSH_CONFIG}"
+ensure_ssh_alias
+
+log "Creating users on ${SSH_NAME} as ${REMOTE_ADMIN_USER}"
 ssh_admin "id -u ${REMOTE_USER} >/dev/null 2>&1 || sudo adduser ${REMOTE_USER}"
 ssh_admin "sudo usermod -aG sudo ${REMOTE_USER}"
 
-log "Updating apt on ${REMOTE_SERVER}"
+log "Updating apt on ${SSH_NAME}"
 ssh_admin "sudo apt update"
 
 log "Verifying login as ${REMOTE_USER}"
 ssh_user "whoami"
 
-log "Ensuring SSH alias ${SSH_NAME} in ${SSH_CONFIG}"
-ensure_ssh_config
-
-log "Opening SSH session: ${SSH_NAME}"
-ssh "${SSH_NAME}"
+log "Copying public key: ${SSH_NAME}"
+ssh-copy-id "${SSH_NAME}"
