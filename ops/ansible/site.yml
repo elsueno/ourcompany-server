@@ -28,7 +28,9 @@
           - wget
           - tar
           - ripgrep
-          - snapd
+          - build-essential
+          - procps
+          - file
         state: present
 
     - name: Set git user name
@@ -43,17 +45,21 @@
         scope: global
         value: "sven@de-selby.com"
 
+    - name: Install Homebrew (Linux)
+      shell: NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      args:
+        creates: /home/linuxbrew/.linuxbrew/bin/brew
+
+    - name: Install glow (Homebrew)
+      command: /home/linuxbrew/.linuxbrew/bin/brew install glow
+      args:
+        creates: /home/linuxbrew/.linuxbrew/bin/glow
+
     - name: Ensure docker group exists
       become: true
       group:
         name: docker
         state: present
-
-    - name: Install glow (snap)
-      become: true
-      command: snap install glow
-      args:
-        creates: /snap/bin/glow
 
     - name: Set default shell to zsh
       become: true
@@ -87,6 +93,12 @@
         path: "{{ home_dir }}/.zshrc"
         regexp: '^export PATH="\\$HOME/\\.local/bin:\\$PATH"$'
         line: 'export PATH="$HOME/.local/bin:$PATH"'
+
+    - name: Ensure Homebrew shellenv in .zshrc
+      lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        regexp: '^test -d /home/linuxbrew/\\.linuxbrew && eval "\\$\\(/home/linuxbrew/\\.linuxbrew/bin/brew shellenv\\)"$'
+        line: 'test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
 
     - name: Ensure ~/.ssh exists
       file:
