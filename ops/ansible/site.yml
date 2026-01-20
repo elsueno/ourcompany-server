@@ -30,6 +30,18 @@
           - ripgrep
         state: present
 
+    - name: Set git user name
+      git_config:
+        name: user.name
+        scope: global
+        value: "elsueno"
+
+    - name: Set git user email
+      git_config:
+        name: user.email
+        scope: global
+        value: "sven@de-selby.com"
+
     - name: Ensure docker group exists
       become: true
       group:
@@ -68,6 +80,27 @@
         path: "{{ home_dir }}/.zshrc"
         regexp: '^export PATH="\\$HOME/\\.local/bin:\\$PATH"$'
         line: 'export PATH="$HOME/.local/bin:$PATH"'
+
+    - name: Ensure ~/.ssh exists
+      file:
+        path: "{{ home_dir }}/.ssh"
+        state: directory
+        mode: "0700"
+
+    - name: Fetch GitHub SSH host keys
+      uri:
+        url: https://api.github.com/meta
+        return_content: true
+      register: github_meta
+      changed_when: false
+
+    - name: Trust GitHub SSH host keys
+      known_hosts:
+        name: github.com
+        key: "github.com {{ item }}"
+        path: "{{ home_dir }}/.ssh/known_hosts"
+      loop: "{{ github_meta.json.ssh_keys | default([]) }}"
+      when: (github_meta.json.ssh_keys | default([])) | length > 0
 
     - name: Clone zsh-tools
       git:
