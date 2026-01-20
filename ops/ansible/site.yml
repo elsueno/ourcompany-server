@@ -28,6 +28,7 @@
           - wget
           - tar
           - ripgrep
+          - snapd
         state: present
 
     - name: Set git user name
@@ -47,6 +48,12 @@
       group:
         name: docker
         state: present
+
+    - name: Install glow (snap)
+      become: true
+      command: snap install glow
+      args:
+        creates: /snap/bin/glow
 
     - name: Set default shell to zsh
       become: true
