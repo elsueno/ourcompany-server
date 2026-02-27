@@ -180,6 +180,13 @@
         regexp: '^\\[ -s "\\$NVM_DIR/nvm\\.sh" \\] && \\. "\\$NVM_DIR/nvm\\.sh"$'
         line: '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
 
+    - name: Prefix zsh prompt with hostname label
+      lineinfile:
+        path: "{{ home_dir }}/.zshrc"
+        regexp: "^PROMPT='%K\\{red\\}%F\\{white\\} .* %f%k '\\$PROMPT$"
+        line: "PROMPT='%K{red}%F{white} %m %f%k '$PROMPT"
+        insertafter: EOF
+
     - name: Install Node LTS via nvm
       shell: |
         export NVM_DIR="{{ home_dir }}/.nvm"
