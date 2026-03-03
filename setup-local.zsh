@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # SSH alias
-SSH_NAME="strawberry"
+SSH_NAME="peach"
 
 # Remote users
 REMOTE_ADMIN_USER="root"

@@ -18,6 +18,25 @@ Usage (on the target host):
 ./ops/ansible/bootstrap.sh
 ```
 
+If the host requires a sudo password for privilege escalation, bootstrap may fail with:
+
+```
+sudo: a password is required
+```
+
+In that case, clear any old sudo cache and re-run bootstrap so it prompts for password:
+
+```sh
+sudo -k
+./ops/ansible/bootstrap.sh
+```
+
+If you still need to force prompting from Ansible, run:
+
+```sh
+ansible-playbook --ask-become-pass -i 'localhost,' -c local ops/ansible/site.yml
+```
+
 Copy ops to the remote host (from your laptop):
 
 ```sh  { name=scp-ops }
