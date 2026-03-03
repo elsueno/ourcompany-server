@@ -33,6 +33,30 @@
           - file
         state: present
 
+    - name: Install Docker Engine and Compose
+      become: true
+      apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+          - docker-compose
+        state: present
+
+    - name: Enable and start Docker service
+      become: true
+      service:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Check docker CLI is installed
+      command: docker --version
+      changed_when: false
+
+    - name: Check docker compose is available
+      command: docker compose version
+      changed_when: false
+
     - name: Set git user name
       git_config:
         name: user.name
