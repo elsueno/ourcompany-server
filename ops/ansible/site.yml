@@ -79,6 +79,11 @@
       args:
         creates: /home/linuxbrew/.linuxbrew/bin/glow
 
+    - name: Install runme (Homebrew)
+      command: /home/linuxbrew/.linuxbrew/bin/brew install runme
+      args:
+        creates: /home/linuxbrew/.linuxbrew/bin/runme
+
     - name: Ensure docker group exists
       become: true
       group:
