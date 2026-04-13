@@ -38,6 +38,7 @@
       apt:
         name:
           - docker.io
+          - docker-buildx
           - docker-compose-v2
           - docker-compose
         state: present
@@ -55,6 +56,10 @@
 
     - name: Check docker compose is available
       command: docker compose version
+      changed_when: false
+
+    - name: Check docker buildx is available
+      command: docker buildx version
       changed_when: false
 
     - name: Set git user name
